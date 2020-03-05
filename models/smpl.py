@@ -31,3 +31,4 @@ class SMPL(_SMPL):
                              betas=smpl_output.betas,
                              full_pose=smpl_output.full_pose)
         return output
+

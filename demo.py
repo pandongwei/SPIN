@@ -36,11 +36,14 @@ from utils.imutils import crop
 from utils.renderer import Renderer
 import config
 import constants
-
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"  ## todo
+os.environ['PYOPENGL_PLATFORM'] = 'egl'
+os.environ['EGL_DEVICE_ID'] = '3'
 parser = argparse.ArgumentParser()
-parser.add_argument('--checkpoint', required=True, help='Path to pretrained checkpoint')
-parser.add_argument('--img', type=str, required=True, help='Path to input image')
-parser.add_argument('--bbox', type=str, default=None, help='Path to .json file containing bounding box coordinates')
+parser.add_argument('--checkpoint', required=False, default='data/model_checkpoint.pt', help='Path to pretrained checkpoint')
+parser.add_argument('--img', type=str, required=False, default='examples/sample/0.png', help='Path to input image')
+parser.add_argument('--bbox', type=str, default='examples/1.json', help='Path to .json file containing bounding box coordinates')
 parser.add_argument('--openpose', type=str, default=None, help='Path to .json containing openpose detections')
 parser.add_argument('--outfile', type=str, default=None, help='Filename of output images. If not set use input filename.')
 
@@ -78,6 +81,7 @@ def process_image(img_file, bbox_file, openpose_file, input_res=224):
     """
     normalize_img = Normalize(mean=constants.IMG_NORM_MEAN, std=constants.IMG_NORM_STD)
     img = cv2.imread(img_file)[:,:,::-1].copy() # PyTorch does not support negative stride at the moment
+    # cv2.imwrite('examples/invert.png',img)
     if bbox_file is None and openpose_file is None:
         # Assume that the person is centerered in the image
         height = img.shape[0]
@@ -90,6 +94,7 @@ def process_image(img_file, bbox_file, openpose_file, input_res=224):
         elif openpose_file is not None:
             center, scale = bbox_from_openpose(openpose_file)
     img = crop(img, center, scale, (input_res, input_res))
+    # cv2.imwrite('examples/crop.png', img)
     img = img.astype(np.float32) / 255.
     img = torch.from_numpy(img).permute(2,0,1)
     norm_img = normalize_img(img.clone())[None]
